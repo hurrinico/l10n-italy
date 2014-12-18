@@ -3,6 +3,8 @@
 #
 #    Copyright (C) 2011-2013 Associazione OpenERP Italia
 #    (<http://www.openerp-italia.org>).
+#    Copyright (C) 2014 Agile Business Group sagl
+#    (<http://www.agilebg.com>)
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as published
@@ -179,36 +181,14 @@ class Parser(report_sxw.rml_parse):
     def set_context(self, objects, data, ids, report_type=None):
         self.localcontext.update({
             'fiscal_page_base': data['form'].get('fiscal_page_base'),
+            'registry_type': data['form'].get('registry_type'),
         })
         return super(Parser, self).set_context(
             objects, data, ids, report_type=report_type)
 
 
 class report_registro_iva_venidte(osv.AbstractModel):
-    _name = 'report.l10n_it_vat_registries.report_registro_iva_vendite'
+    _name = 'report.l10n_it_vat_registries.report_registro_iva'
     _inherit = 'report.abstract_report'
-    _template = 'l10n_it_vat_registries.report_registro_iva_vendite'
+    _template = 'l10n_it_vat_registries.report_registro_iva'
     _wrapped_report_class = Parser
-
-
-class report_registro_iva_acquisti(osv.AbstractModel):
-    _name = 'report.l10n_it_vat_registries.report_registro_iva_acquisti'
-    _inherit = 'report.abstract_report'
-    _template = 'l10n_it_vat_registries.report_registro_iva_acquisti'
-    _wrapped_report_class = Parser
-
-report_sxw.report_sxw(
-    'report.registro_iva_vendite',
-    'registro_iva_vendite',
-    'addons/l10n_it_vat_registries/templates/registro_iva_vendite.mako',
-    parser=Parser)
-report_sxw.report_sxw(
-    'report.registro_iva_acquisti',
-    'registro_iva_acquisti',
-    'addons/l10n_it_vat_registries/templates/registro_iva_acquisti.mako',
-    parser=Parser)
-report_sxw.report_sxw(
-    'report.registro_iva_corrispettivi',
-    'registro_iva_corrispettivi',
-    'addons/l10n_it_vat_registries/templates/registro_iva_corrispettivi.mako',
-    parser=Parser)
