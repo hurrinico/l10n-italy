@@ -33,6 +33,7 @@
                                     domain="[('code', '=', 'stock.ddt')]"
                                     widget="selection"/>
                                 <field name="partner_id"/>
+                                <field name="delivery_address_id"/>
                             </group>
                             <group>
                                 <field name="date"/>

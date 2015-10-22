@@ -117,6 +117,8 @@ class StockDdT(models.Model):
         string='State',
         default='draft'
     )
+    delivery_address_id = fields.Many2one(
+        'res.partner', string='Delivery Address', required=False)
     invoice_state = fields.Selection(
         [("invoiced", "Invoiced"),
          ("2binvoiced", "To Be Invoiced"),
@@ -163,7 +165,7 @@ class StockDdT(models.Model):
         result = []
         for ddt in self:
             result.append((ddt.id, "%s" % (
-                ddt.name or str(
+                ddt.name or unicode(
                     'N/A: ' + ddt.partner_id.name + ' ' + ddt.date))))
         return result
 
