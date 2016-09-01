@@ -148,3 +148,68 @@ class StockPickingPackagePreparation(models.Model):
             name = u'{partner} of {date}'.format(partner=self.partner_id.name,
                                                  date=self.date)
         self.display_name = name
+
+    @api.one
+    @api.depends('package_id',
+                 'package_id.children_ids',
+                 'package_id.ul_id',
+                 'package_id.quant_ids',
+                 'picking_ids',
+                 'picking_ids.move_lines',
+                 'picking_ids.move_lines.quant_ids')
+    def _compute_weight(self):
+        res = super(StockPickingPackagePreparation, self)._compute_weight()
+        if not self.package_id:
+            quants = self.env['stock.quant']
+            for picking in self.picking_ids:
+                for line in picking.move_lines:
+                    for quant in line.quant_ids:
+                        if quant.qty >= 0:
+                            quants |= quant
+            weight = sum(l.product_id.weight * l.qty for l in quants)
+            self.net_weight = weight
+            self.weight = weight
+
+    @api.multi
+    def create_invoice(self):
+        # ----- Check if sale order related to ddt are invoiced. Show them.
+        invoiced_sale = [
+            picking.sale_id.id
+            for picking in self.picking_ids
+            if picking.sale_id and picking.sale_id.invoice_ids]
+        if invoiced_sale:
+            return {
+                'type': 'ir.actions.act_window',
+                'view_type': 'form',
+                'view_mode': 'tree,form',
+                'res_model': 'sale.order',
+                'target': 'current',
+                'domain': '[("id", "in", {ids})]'.format(ids=invoiced_sale),
+                }
+        # ----- Open wizard to create invoices
+        return {
+            'type': 'ir.actions.act_window',
+            'view_type': 'form',
+            'view_mode': 'form',
+            'res_model': 'ddt.create.invoice',
+            'target': 'new',
+            }
+
+
+class StockPickingPackagePreparationLine(models.Model):
+
+    _inherit = 'stock.picking.package.preparation.line'
+
+    invoiceable = fields.Selection(
+        [('none', 'None'), ('invoiceable', 'Invoiceable')],
+        default='invoiceable')
+
+    @api.multi
+    def get_move_data(self):
+        move_data = super(StockPickingPackagePreparationLine,
+                          self).get_move_data()
+        if self.invoiceable == 'invoiceable':
+            move_data.update({
+                'invoice_state': '2binvoiced',
+                })
+        return move_data
